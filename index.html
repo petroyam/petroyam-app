@@ -19,6 +19,7 @@ button.btn{background:#0284c7;color:#fff;border:0;padding:12px;border-radius:10p
 button.btn-green{background:#16a34a}
 button.btn-orange{background:#ea580c}
 button.btn-red{background:#dc2626}
+button.btn-gray{background:#475569}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 @media(max-width:700px){.grid{grid-template-columns:1fr}}
 table{width:100%;border-collapse:collapse;margin-top:10px}
@@ -31,6 +32,10 @@ th{color:#38bdf8}
 .stat{display:flex;gap:10px;flex-wrap:wrap}
 .stat div{flex:1;background:#0f172a;padding:15px;border-radius:12px;text-align:center;min-width:140px}
 .stat b{font-size:22px;display:block;color:#38bdf8}
+.perm{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.perm label{background:#0f172a;padding:8px 12px;border-radius:20px;font-size:13px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.perm input{width:auto;margin:0}
+.badge{background:#38bdf8;color:#0f172a;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:bold}
 </style>
 </head>
 <body>
@@ -40,7 +45,7 @@ th{color:#38bdf8}
     <div class="logo">PETROYAM</div>
     <div class="sub">نظام إدارة المخزن والمبيعات</div>
     <label>اسم المستخدم</label>
-    <input id="loginUser" placeholder="مثال: admin">
+    <input id="loginUser" placeholder="اسم المستخدم">
     <label>كلمة المرور</label>
     <input id="loginPass" type="password" placeholder="••••••••">
     <button class="btn" onclick="login()">دخول</button>
@@ -64,8 +69,33 @@ th{color:#38bdf8}
     </div>
   </div>
 
+  <div id="usersCard" class="card hidden">
+    <h3>👑 إدارة المستخدمين والصلاحيات (المدير فقط)</h3>
+    <p class="small">ضيف أي يوزر بكيفيك، وانطيه الصلاحيات اللي تريدها. كلشي ينحفظ.</p>
+    <div class="grid">
+      <div><label>اسم المستخدم (للدخول)</label><input id="newU" placeholder="مثال: amin"></div>
+      <div><label>الاسم الكامل</label><input id="newName" placeholder="مثال: أمين المخزن"></div>
+      <div><label>كلمة المرور</label><input id="newP" placeholder="الباسورد"></div>
+      <div><label>الدور</label><select id="newRole"><option value="مدير">مدير</option><option value="أمين مخزن">أمين مخزن</option><option value="موزع">موزع</option><option value="موظف">موظف</option></select></div>
+    </div>
+    <label style="margin-top:10px;display:block">الصلاحيات:</label>
+    <div class="perm">
+      <label><input type="checkbox" id="permAddProduct" checked> إضافة منتج</label>
+      <label><input type="checkbox" id="permAddDist" checked> إضافة موزع</label>
+      <label><input type="checkbox" id="permSale" checked> بيع</label>
+      <label><input type="checkbox" id="permDelete" > حذف</label>
+      <label><input type="checkbox" id="permViewSales" checked> مشاهدة المبيعات</label>
+      <label><input type="checkbox" id="permManageUsers" > إدارة المستخدمين</label>
+    </div>
+    <button class="btn btn-green" onclick="addUser()">➕ إضافة مستخدم جديد</button>
+    <table>
+      <thead><tr><th>اليوزر</th><th>الاسم</th><th>الدور</th><th>الصلاحيات</th><th>حذف</th></tr></thead>
+      <tbody id="usersTable"></tbody>
+    </table>
+  </div>
+
   <div id="addProductCard" class="card hidden">
-    <h3>➕ إضافة منتج جديد (المدير فقط)</h3>
+    <h3>➕ إضافة منتج جديد</h3>
     <div class="grid">
       <div><label>اسم المنتج</label><input id="pName" placeholder="مثال: زيت محرك"></div>
       <div><label>سعر الكارتون</label><input id="pPrice" type="number" placeholder="0"></div>
@@ -76,7 +106,7 @@ th{color:#38bdf8}
   </div>
 
   <div id="addDistCard" class="card hidden">
-    <h3>👤 إضافة موزع جديد (المدير فقط)</h3>
+    <h3>👤 إضافة موزع جديد</h3>
     <div class="grid">
       <div><label>اسم الموزع</label><input id="dName" placeholder="اسم الموزع"></div>
       <div><label>رقم الهاتف</label><input id="dPhone" placeholder="07xxxxxxxxx"></div>
@@ -86,7 +116,7 @@ th{color:#38bdf8}
     <button class="btn btn-orange" onclick="addDist()">إضافة الموزع</button>
   </div>
 
-  <div class="card">
+  <div id="saleCard" class="card">
     <h3>🛒 بيع منتج</h3>
     <div class="grid">
       <div><label>اختر المنتج</label><select id="saleProduct"></select></div>
@@ -115,32 +145,50 @@ th{color:#38bdf8}
 
   <div id="changePassCard" class="card hidden">
     <h3>🔐 تغيير الباسوردات (المدير فقط)</h3>
-    <p class="small">غير باسورد المدير أو أمين المخزن</p>
     <div class="grid">
-      <div><label>اختر الحساب</label><select id="passUser"><option value="admin">المدير - admin</option><option value="store">أمين المخزن - store</option></select></div>
+      <div><label>اختر الحساب</label><select id="passUser"></select></div>
       <div><label>الباسورد الجديد</label><input id="newPass" placeholder="الباسورد الجديد"></div>
     </div>
     <button class="btn btn-red" onclick="changePass()">تغيير الباسورد</button>
   </div>
 
-  <div class="card">
+  <div id="salesCard" class="card">
     <h3>📊 آخر المبيعات</h3>
     <table>
       <thead><tr><th>التاريخ</th><th>المنتج</th><th>الموزع</th><th>الكمية</th><th>المبلغ</th></tr></thead>
       <tbody id="salesTable"></tbody>
     </table>
   </div>
+
+  <div id="trashCard" class="card hidden">
+    <h3>🗑️ سلة المحذوفات - استرجاع أي شي حذفته</h3>
+    <p class="small">كلشي تحذفه ينحفظ هنا، وتكدر ترجعه بأي وقت. ما ينمسح نهائياً إلا إذا انت مسحته من هنا.</p>
+    <table>
+      <thead><tr><th>النوع</th><th>التفاصيل</th><th>تاريخ الحذف</th><th>استرجاع</th><th>حذف نهائي</th></tr></thead>
+      <tbody id="trashTable"></tbody>
+    </table>
+    <button class="btn btn-gray" onclick="emptyTrash()">تفريغ السلة نهائياً</button>
+  </div>
+
 </div>
 </div>
 
 <script>
 let users = JSON.parse(localStorage.getItem('petroyam_users')) || [
-  {u:'admin',p:'Mah@MM@8166@540',role:'مدير',name:'محمود - المدير'},
-  {u:'store',p:'Store@123',role:'أمين مخزن',name:'أمين المخزن'}
+  {u:'admin',p:'Mah@MM@8166@540',role:'مدير',name:'محمود - المدير',perms:{addProduct:1,addDist:1,sale:1,delete:1,viewSales:1,manageUsers:1}},
+  {u:'store',p:'Pm@368@357@?!',role:'أمين مخزن',name:'أمين المخزن',perms:{addProduct:1,addDist:1,sale:1,delete:0,viewSales:1,manageUsers:0}}
 ];
+// تصحيح تلقائي: اذا كان حساب store قديم بباسورد قديم، حدثه للجديد
+let _s = users.find(x=>x.u==='store');
+if(_s && _s.p!=='Pm@368@357@?!'){ _s.p='Pm@368@357@?!'; localStorage.setItem('petroyam_users',JSON.stringify(users)); }
+// حذف حساب amin القديم اذا موجود حتى لا يصير خربطة
+users = users.filter(x=>x.u!=='amin');
+localStorage.setItem('petroyam_users',JSON.stringify(users));
+
 let products = JSON.parse(localStorage.getItem('petroyam_products')) || [];
 let dists = JSON.parse(localStorage.getItem('petroyam_dists')) || [];
 let sales = JSON.parse(localStorage.getItem('petroyam_sales')) || [];
+let trash = JSON.parse(localStorage.getItem('petroyam_trash')) || [];
 let currentUser = null;
 
 function saveAll(){
@@ -148,8 +196,22 @@ function saveAll(){
   localStorage.setItem('petroyam_products',JSON.stringify(products));
   localStorage.setItem('petroyam_dists',JSON.stringify(dists));
   localStorage.setItem('petroyam_sales',JSON.stringify(sales));
+  localStorage.setItem('petroyam_trash',JSON.stringify(trash));
 }
-
+function hasPerm(k){
+  if(!currentUser) return false;
+  if(currentUser.role==='مدير') return true;
+  return currentUser.perms && currentUser.perms[k];
+}
+function applyPerms(){
+  document.getElementById('addProductCard').classList.toggle('hidden', !hasPerm('addProduct'));
+  document.getElementById('addDistCard').classList.toggle('hidden', !hasPerm('addDist'));
+  document.getElementById('saleCard').classList.toggle('hidden', !hasPerm('sale'));
+  document.getElementById('salesCard').classList.toggle('hidden', !hasPerm('viewSales'));
+  document.getElementById('usersCard').classList.toggle('hidden', !hasPerm('manageUsers'));
+  document.getElementById('changePassCard').classList.toggle('hidden', !(currentUser.role==='مدير'||hasPerm('manageUsers')));
+  document.getElementById('trashCard').classList.toggle('hidden', !(currentUser.role==='مدير'||hasPerm('manageUsers')));
+}
 function login(){
   let u=document.getElementById('loginUser').value.trim();
   let p=document.getElementById('loginPass').value.trim();
@@ -160,14 +222,30 @@ function login(){
   document.getElementById('loginPage').classList.add('hidden');
   document.getElementById('appPage').classList.remove('hidden');
   document.getElementById('welcomeName').innerText='مرحباً '+found.name;
-  if(found.role==='مدير'){
-    document.getElementById('addProductCard').classList.remove('hidden');
-    document.getElementById('addDistCard').classList.remove('hidden');
-    document.getElementById('changePassCard').classList.remove('hidden');
-  }
+  applyPerms();
   render();
 }
 function logout(){localStorage.removeItem('petroyam_session');location.reload();}
+function addUser(){
+  let u=document.getElementById('newU').value.trim();
+  let n=document.getElementById('newName').value.trim();
+  let p=document.getElementById('newP').value.trim();
+  let r=document.getElementById('newRole').value;
+  if(!u||!p||!n){alert('اكتب اليوزر والاسم والباسورد');return;}
+  if(users.find(x=>x.u===u)){alert('هذا اليوزر موجود already، اختر اسم ثاني');return;}
+  let perms={addProduct:document.getElementById('permAddProduct').checked?1:0,addDist:document.getElementById('permAddDist').checked?1:0,sale:document.getElementById('permSale').checked?1:0,delete:document.getElementById('permDelete').checked?1:0,viewSales:document.getElementById('permViewSales').checked?1:0,manageUsers:document.getElementById('permManageUsers').checked?1:0};
+  users.push({u:u,p:p,role:r,name:n,perms:perms});
+  saveAll();render();
+  document.getElementById('newU').value='';document.getElementById('newName').value='';document.getElementById('newP').value='';
+  alert('تمت إضافة المستخدم: '+u);
+}
+function delUser(i){
+  if(users[i].u==='admin'){alert('ما يصير تحذف المدير الرئيسي');return;}
+  if(confirm('تحذف اليوزر '+users[i].u+' ؟ راح يروح للسلة وتكدر ترجعه')){
+    trash.unshift({type:'مستخدم',data:users[i],[STRIPPED] - '+users[i].name,date:new Date().toLocaleString('ar-IQ')});
+    users.splice(i,1); saveAll(); render(); alert('تم نقل المستخدم للسلة');
+  }
+}
 function addProduct(){
   let n=document.getElementById('pName').value.trim();
   let pr=Number(document.getElementById('pPrice').value);
@@ -208,20 +286,51 @@ function changePass(){
   if(!np){alert('اكتب الباسورد الجديد');return;}
   let f=users.find(x=>x.u===u); f.p=np; saveAll();
   document.getElementById('newPass').value='';
-  alert('تم تغيير الباسورد لـ '+u+' إلى: '+np);
+  alert('تم تغيير الباسورد لـ '+u);
 }
-function delProduct(i){if(currentUser.role!=='مدير'){alert('فقط المدير يحذف');return;} if(confirm('حذف المنتج؟')){products.splice(i,1);saveAll();render();}}
-function delDist(i){if(currentUser.role!=='مدير'){alert('فقط المدير يحذف');return;} if(confirm('حذف الموزع؟')){dists.splice(i,1);saveAll();render();}}
+function delProduct(i){
+  if(!hasPerm('delete')){alert('ما عندك صلاحية حذف');return;}
+  if(confirm('حذف المنتج؟ راح يروح للسلة وتكدر ترجعه')){
+    trash.unshift({type:'منتج',data:products[i],[STRIPPED] - '+products[i].price,date:new Date().toLocaleString('ar-IQ')});
+    products.splice(i,1);saveAll();render();
+  }
+}
+function delDist(i){
+  if(!hasPerm('delete')){alert('ما عندك صلاحية حذف');return;}
+  if(confirm('حذف الموزع؟ راح يروح للسلة وتكدر ترجعه')){
+    trash.unshift({type:'موزع',data:dists[i],[STRIPPED] Date().toLocaleString('ar-IQ')});
+    dists.splice(i,1);saveAll();render();
+  }
+}
+function restoreTrash(i){
+  let t=trash[i];
+  if(t.type==='منتج') products.push(t.data);
+  if(t.type==='موزع') dists.push(t.data);
+  if(t.type==='مستخدم') users.push(t.data);
+  trash.splice(i,1); saveAll(); render(); alert('تم الاسترجاع بنجاح');
+}
+function delTrashFinal(i){
+  if(confirm('حذف نهائي؟ ما راح تكدر ترجعه بعد')){trash.splice(i,1);saveAll();render();}
+}
+function emptyTrash(){
+  if(confirm('تمسح السلة كلها نهائياً؟')){trash=[];saveAll();render();}
+}
 function render(){
   document.getElementById('statProducts').innerText=products.length;
   document.getElementById('statDist').innerText=dists.length;
   document.getElementById('statStock').innerText=products.reduce((a,b)=>a+b.qty,0);
   document.getElementById('statSales').innerText=sales.reduce((a,b)=>a+b.total,0);
+  document.getElementById('usersTable').innerHTML=users.map((u,i)=>{
+    let perms=[]; if(u.perms?.addProduct)perms.push('منتج'); if(u.perms?.sale)perms.push('بيع'); if(u.perms?.delete)perms.push('حذف'); if(u.perms?.manageUsers)perms.push('إدارة');
+    return `<tr><td><b>${u.u}</b></td><td>${u.name}</td><td><span class="badge">${u.role}</span></td><td>${perms.join(' ، ')||'بدون'}</td><td><button onclick="delUser(${i})" style="background:#dc2626;color:#fff;border:0;padding:5px 10px;border-radius:6px;cursor:pointer">حذف</button></td></tr>`;
+  }).join('');
+  document.getElementById('passUser').innerHTML=users.map(u=>`<option value="${u.u}">${u.name} - ${u.u}</option>`).join('');
   document.getElementById('productTable').innerHTML=products.map((p,i)=>`<tr><td>${p.name}</td><td>${p.price}</td><td>${p.qty}</td><td>${p.note||''}</td><td><button onclick="delProduct(${i})" style="background:#dc2626;color:#fff;border:0;padding:5px 10px;border-radius:6px;cursor:pointer">حذف</button></td></tr>`).join('')||'<tr><td colspan="5">لا توجد منتجات بعد</td></tr>';
   document.getElementById('distTable').innerHTML=dists.map((d,i)=>`<tr><td>${d.name}</td><td>${d.phone||''}</td><td>${d.area||''}</td><td><button onclick="delDist(${i})" style="background:#dc2626;color:#fff;border:0;padding:5px 10px;border-radius:6px;cursor:pointer">حذف</button></td></tr>`).join('')||'<tr><td colspan="4">لا يوجد موزعين بعد</td></tr>';
   document.getElementById('saleProduct').innerHTML=products.map((p,i)=>`<option value="${i}">${p.name} - ${p.price} - متوفر: ${p.qty}</option>`).join('');
   document.getElementById('saleDist').innerHTML=dists.map((d,i)=>`<option value="${i}">${d.name}</option>`).join('');
   document.getElementById('salesTable').innerHTML=sales.map(s=>`<tr><td>${s.date}</td><td>${s.product}</td><td>${s.dist}</td><td>${s.qty}</td><td>${s.total}</td></tr>`).join('')||'<tr><td colspan="5">لا توجد مبيعات بعد</td></tr>';
+  document.getElementById('trashTable').innerHTML=trash.map((t,i)=>`<tr><td>${t.type}</td><td>${t.detail}</td><td>${t.date}</td><td><button onclick="restoreTrash(${i})" style="background:#16a34a;color:#fff;border:0;padding:5px 10px;border-radius:6px;cursor:pointer">استرجاع</button></td><td><button onclick="delTrashFinal(${i})" style="background:#dc2626;color:#fff;border:0;padding:5px 10px;border-radius:6px;cursor:pointer">حذف نهائي</button></td></tr>`).join('')||'<tr><td colspan="5">السلة فارغة - كلشي محفوظ</td></tr>';
   updateTotal();
 }
 function updateTotal(){
@@ -231,19 +340,15 @@ function updateTotal(){
 }
 document.getElementById('saleQty').addEventListener('input',updateTotal);
 document.getElementById('saleProduct').addEventListener('change',updateTotal);
-
 let savedSession = JSON.parse(localStorage.getItem('petroyam_session')||'null');
 window.addEventListener('load',()=>{
   if(savedSession){
-    currentUser=savedSession;
+    let fresh = users.find(x=>x.u===savedSession.u);
+    currentUser = fresh || savedSession;
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('appPage').classList.remove('hidden');
-    document.getElementById('welcomeName').innerText='مرحباً '+savedSession.name;
-    if(savedSession.role==='مدير'){
-      document.getElementById('addProductCard').classList.remove('hidden');
-      document.getElementById('addDistCard').classList.remove('hidden');
-      document.getElementById('changePassCard').classList.remove('hidden');
-    }
+    document.getElementById('welcomeName').innerText='مرحباً '+currentUser.name;
+    applyPerms();
     render();
   }
 });

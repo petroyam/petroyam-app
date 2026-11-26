@@ -1,224 +1,254 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PetroYam - مخزن</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام مخزن بترويام - Petroyam</title>
 <style>
-*{box-sizing:border-box;font-family:Tahoma} body{margin:0;background:#0f172a;color:#fff}
-header{background:#f59e0b;color:#000;padding:15px;text-align:center;font-weight:bold;font-size:22px}
-.card{background:#1e293b;margin:12px;padding:15px;border-radius:12px}
-input,select,button{width:100%;padding:11px;margin:6px 0;border-radius:8px;border:none}
-input,select{background:#0f172a;color:#fff;border:1px solid #334155}
-button{background:#f59e0b;color:#000;font-weight:bold;cursor:pointer}
-table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:8px;border-bottom:1px solid #334155;text-align:center}
-.small{font-size:12px;color:#cbd5e1} .red{background:#ef4444;color:#fff} .green{background:#22c55e;color:#000} .blue{background:#3b82f6;color:#fff} .hidden{display:none}
-@media print{ body{background:#fff;color:#000} header{background:#fff} .no-print{display:none!important} .card{background:#fff;color:#000;border:1px solid #000} }
+*{box-sizing:border-box;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+body{margin:0;background:#0f172a;color:#fff;min-height:100vh}
+.hidden{display:none!important}
+header{background:#1e293b;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+header h1{font-size:20px;margin:0;color:#38bdf8}
+header button{background:#ef4444;color:#fff;border:0;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:bold}
+.container{max-width:1100px;margin:auto;padding:20px}
+.card{background:#1e293b;border-radius:14px;padding:20px;margin-bottom:20px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+input,select{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:15px;outline:none}
+input:focus{border-color:#38bdf8}
+button.btn{background:#0284c7;color:#fff;border:0;padding:12px;border-radius:10px;width:100%;cursor:pointer;font-weight:bold;font-size:16px;margin-top:8px}
+button.btn-green{background:#16a34a}
+button.btn-orange{background:#ea580c}
+button.btn-red{background:#dc2626}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:10px;border-bottom:1px solid #334155;text-align:right;font-size:14px}
+th{color:#38bdf8}
+.small{font-size:13px;color:#94a3b8}
+.login-box{max-width:420px;margin:60px auto}
+.logo{text-align:center;font-size:32px;font-weight:900;color:#38bdf8}
+.sub{text-align:center;color:#94a3b8;margin-bottom:20px}
+.stat{display:flex;gap:10px;flex-wrap:wrap}
+.stat div{flex:1;background:#0f172a;padding:15px;border-radius:12px;text-align:center;min-width:140px}
+.stat b{font-size:22px;display:block;color:#38bdf8}
 </style>
 </head>
 <body>
-<header>⛽ PETROYAM - نظام المخزن</header>
 
-<div id="loginBox" class="card no-print">
-<h3>تسجيل الدخول</h3>
-<input id="u" placeholder="اسم المستخدم">
-<input id="p" type="password" placeholder="كلمة السر">
-<button onclick="login()">دخول</button>
+<div id="loginPage" class="container">
+  <div class="card login-box">
+    <div class="logo">PETROYAM</div>
+    <div class="sub">نظام إدارة المخزن والمبيعات</div>
+    <label>اسم المستخدم</label>
+    <input id="loginUser" placeholder="مثال: admin">
+    <label>كلمة المرور</label>
+    <input id="loginPass" type="password" placeholder="••••••••">
+    <button class="btn" onclick="login()">دخول</button>
+    <p class="small" style="text-align:center;margin-top:12px">المدير: admin / Mah@MM@8166@540<br>أمين المخزن: store / Store@123</p>
+    <p id="loginError" style="color:#f87171;text-align:center"></p>
+  </div>
 </div>
 
-<div id="app" class="hidden">
-<div class="card no-print">مرحباً <b id="who"></b> | <span id="roleTxt"></span> <button onclick="logout()" class="red">خروج</button></div>
+<div id="appPage" class="hidden">
+<header>
+  <h1>🏭 PETROYAM - <span id="welcomeName"></span></h1>
+  <button onclick="logout()">خروج</button>
+</header>
 
-<!-- ADMIN ONLY -->
-<div id="adminPanel" class="card hidden no-print">
-<h3>إضافة منتج جديد (المدير فقط)</h3>
-<input id="pName" placeholder="اسم المنتج">
-<input id="pQty" type="number" placeholder="الكمية - كارتون">
-<input id="pPrice" type="number" placeholder="سعر الكارتون الواحد">
-<button onclick="addProduct()">إضافة للمخزن</button>
+<div class="container">
+  <div class="card">
+    <div class="stat">
+      <div><span>إجمالي المنتجات</span><b id="statProducts">0</b></div>
+      <div><span>إجمالي الموزعين</span><b id="statDist">0</b></div>
+      <div><span>إجمالي المخزون</span><b id="statStock">0</b></div>
+      <div><span>إجمالي المبيعات</span><b id="statSales">0</b></div>
+    </div>
+  </div>
 
-<h3 style="margin-top:20px">إضافة موزع جديد (المدير فقط)</h3>
-<input id="newDistName" placeholder="اسم الموزع">
-<button onclick="addDistributor()" class="green">+ إضافة موزع</button>
-<div id="distList" class="small"></div>
+  <div id="addProductCard" class="card hidden">
+    <h3>➕ إضافة منتج جديد (المدير فقط)</h3>
+    <div class="grid">
+      <div><label>اسم المنتج</label><input id="pName" placeholder="مثال: زيت محرك"></div>
+      <div><label>سعر الكارتون</label><input id="pPrice" type="number" placeholder="0"></div>
+      <div><label>الكمية بالمخزن</label><input id="pQty" type="number" placeholder="0"></div>
+      <div><label>ملاحظات</label><input id="pNote" placeholder="اختياري"></div>
+    </div>
+    <button class="btn btn-green" onclick="addProduct()">إضافة المنتج</button>
+  </div>
 
-<h3 style="margin-top:20px">🔐 تغيير الباسوردات (المدير فقط)</h3>
-<label class="small">اختر الحساب:</label>
-<select id="passUser">
-<option value="admin">admin - المدير</option>
-<option value="amin">amin - أمين المخزن</option>
-</select>
-<input id="newPass" type="text" placeholder="اكتب الباسورد الجديد">
-<button onclick="changePassword()" class="blue">حفظ الباسورد الجديد</button>
-<p class="small">ملاحظة: المدير بس يقدر يغير الباسوردات، أمين المخزن ما يشوف هالقسم أبداً.</p>
+  <div id="addDistCard" class="card hidden">
+    <h3>👤 إضافة موزع جديد (المدير فقط)</h3>
+    <div class="grid">
+      <div><label>اسم الموزع</label><input id="dName" placeholder="اسم الموزع"></div>
+      <div><label>رقم الهاتف</label><input id="dPhone" placeholder="07xxxxxxxxx"></div>
+      <div><label>المنطقة</label><input id="dArea" placeholder="المنطقة"></div>
+      <div><label>ملاحظات</label><input id="dNote" placeholder="اختياري"></div>
+    </div>
+    <button class="btn btn-orange" onclick="addDist()">إضافة الموزع</button>
+  </div>
+
+  <div class="card">
+    <h3>🛒 بيع منتج</h3>
+    <div class="grid">
+      <div><label>اختر المنتج</label><select id="saleProduct"></select></div>
+      <div><label>اختر الموزع</label><select id="saleDist"></select></div>
+      <div><label>الكمية</label><input id="saleQty" type="number" value="1"></div>
+      <div><label>السعر الكلي</label><input id="saleTotal" readonly></div>
+    </div>
+    <button class="btn" onclick="makeSale()">تأكيد البيع وخصم من المخزون</button>
+  </div>
+
+  <div class="card">
+    <h3>📦 المنتجات والمخزون</h3>
+    <table>
+      <thead><tr><th>المنتج</th><th>السعر</th><th>الكمية</th><th>ملاحظات</th><th>حذف</th></tr></thead>
+      <tbody id="productTable"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>👥 الموزعين</h3>
+    <table>
+      <thead><tr><th>الاسم</th><th>الهاتف</th><th>المنطقة</th><th>حذف</th></tr></thead>
+      <tbody id="distTable"></tbody>
+    </table>
+  </div>
+
+  <div id="changePassCard" class="card hidden">
+    <h3>🔐 تغيير الباسوردات (المدير فقط)</h3>
+    <p class="small">غير باسورد المدير أو أمين المخزن</p>
+    <div class="grid">
+      <div><label>اختر الحساب</label><select id="passUser"><option value="admin">المدير - admin</option><option value="store">أمين المخزن - store</option></select></div>
+      <div><label>الباسورد الجديد</label><input id="newPass" placeholder="الباسورد الجديد"></div>
+    </div>
+    <button class="btn btn-red" onclick="changePass()">تغيير الباسورد</button>
+  </div>
+
+  <div class="card">
+    <h3>📊 آخر المبيعات</h3>
+    <table>
+      <thead><tr><th>التاريخ</th><th>المنتج</th><th>الموزع</th><th>الكمية</th><th>المبلغ</th></tr></thead>
+      <tbody id="salesTable"></tbody>
+    </table>
+  </div>
 </div>
-
-<div class="card no-print"><h3>المخزون الحالي</h3><input id="search" placeholder="ابحث..." oninput="render()"><div id="stock"></div></div>
-
-<div class="card no-print">
-<h3>تسجيل أوردر طلع</h3>
-<p class="small" id="outHint"></p>
-<select id="outProduct"></select>
-<input id="outQty" type="number" placeholder="الكمية - كارتون">
-<label class="small">اختر الموزع:</label>
-<select id="outTo"></select>
-<input id="outNote" placeholder="ملاحظة - اختياري">
-<button onclick="outStock()">تسجيل خروج الأوردر</button>
-</div>
-
-<div id="adminReturn" class="card hidden no-print">
-<h3>إرجاع بضاعة (المدير فقط)</h3>
-<select id="retProduct"></select>
-<input id="retQty" type="number" placeholder="الكمية المرجعة">
-<button onclick="returnStock()" class="green">إرجاع للمخزن</button>
-</div>
-
-<div class="card no-print">
-<h3>🖨️ ريبورت تفصيلي للموزع</h3>
-<label class="small">اختر الموزع:</label>
-<select id="repDist"></select>
-<label class="small">من تاريخ:</label>
-<input id="repFrom" type="date">
-<label class="small">إلى تاريخ:</label>
-<input id="repTo" type="date">
-<button onclick="makeReport()" class="blue">عرض الريبورت التفصيلي</button>
-</div>
-
-<div id="reportBox" class="card hidden">
-<h3 style="text-align:center">تقرير تفصيلي - PetroYam</h3>
-<p style="text-align:center" id="repTitle"></p>
-<div id="repContent"></div>
-<p id="repTotal" style="text-align:center;font-weight:bold;font-size:16px"></p>
-<p class="small" style="text-align:center">تم إعداد التقرير بواسطة: <span id="repBy"></span> | التاريخ: <span id="repPrintDate"></span></p>
-<button onclick="window.print()" class="blue no-print">طباعة الريبورت</button>
-<button onclick="document.getElementById('reportBox').classList.add('hidden')" class="red no-print">إغلاق</button>
-</div>
-
-<div class="card no-print"><h3>سجل الأوردرات</h3><div id="logs"></div></div>
-<div class="card no-print"><h3>سجل دخول الموظفين</h3><div id="loginLogs"></div></div>
 </div>
 
 <script>
-// الباسوردات الافتراضية - أول مرة فقط، بعدها تتخزن وتتغير من داخل البرنامج
-let defaultUsers=[
- {u:'admin',p:'Mah@MM@8166@540',role:'مدير',name:'محمود - المدير'},
- {u:'amin',p:'Pm@368@357?!',role:'امين مخزن',name:'أمين المخزن'},
+let users = JSON.parse(localStorage.getItem('petroyam_users')) || [
+  {u:'admin',p:'Mah@MM@8166@540',role:'مدير',name:'محمود - المدير'},
+  {u:'store',p:'Store@123',role:'أمين مخزن',name:'أمين المخزن'}
 ];
-let users = JSON.parse(localStorage.getItem('py_users')||'null') || defaultUsers;
-let distributors = JSON.parse(localStorage.getItem('py_dists')||'[]');
-let products = JSON.parse(localStorage.getItem('py_products')||'[]');
-let logs = JSON.parse(localStorage.getItem('py_logs')||'[]');
-let loginLogs = JSON.parse(localStorage.getItem('py_loginLogs')||'[]');
-let current=null;
-function save(){localStorage.setItem('py_users',JSON.stringify(users));localStorage.setItem('py_dists',JSON.stringify(distributors));localStorage.setItem('py_products',JSON.stringify(products));localStorage.setItem('py_logs',JSON.stringify(logs));localStorage.setItem('py_loginLogs',JSON.stringify(loginLogs));}
-function now(){return new Date().toLocaleString('ar-IQ')}
+let products = JSON.parse(localStorage.getItem('petroyam_products')) || [];
+let dists = JSON.parse(localStorage.getItem('petroyam_dists')) || [];
+let sales = JSON.parse(localStorage.getItem('petroyam_sales')) || [];
+let currentUser = null;
+
+function saveAll(){
+  localStorage.setItem('petroyam_users',JSON.stringify(users));
+  localStorage.setItem('petroyam_products',JSON.stringify(products));
+  localStorage.setItem('petroyam_dists',JSON.stringify(dists));
+  localStorage.setItem('petroyam_sales',JSON.stringify(sales));
+}
+
 function login(){
- let u=document.getElementById('u').value.trim(), p=document.getElementById('p').value.trim();
- let f=users.find(x=>x.u==u && x.p==p);
- if(!f) return alert('يوزر أو باسورد غلط');
- current=f;
- loginLogs.unshift({name:f.name, role:f.role, time:now()});
- save();
- document.getElementById('loginBox').classList.add('hidden');
- document.getElementById('app').classList.remove('hidden');
- document.getElementById('who').innerText=f.name;
- document.getElementById('roleTxt').innerText=f.role;
- // المدير عنده كل الصلاحيات - يشوف كلشي
- if(f.role=='مدير'){
-   document.getElementById('adminPanel').classList.remove('hidden');
-   document.getElementById('adminReturn').classList.remove('hidden');
-   document.getElementById('outHint').innerText='انت داخل كمدير، عندك كل صلاحيات أمين المخزن + صلاحيات المدير';
- } else {
-   document.getElementById('outHint').innerText='انت داخل كأمين مخزن';
- }
- render();
+  let u=document.getElementById('loginUser').value.trim();
+  let p=document.getElementById('loginPass').value.trim();
+  let found=users.find(x=>x.u===u && x.p===p);
+  if(!found){document.getElementById('loginError').innerText='اسم المستخدم أو كلمة المرور غير صحيحة';return;}
+  currentUser=found;
+  localStorage.setItem('petroyam_session',JSON.stringify(found));
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('appPage').classList.remove('hidden');
+  document.getElementById('welcomeName').innerText='مرحباً '+found.name;
+  if(found.role==='مدير'){
+    document.getElementById('addProductCard').classList.remove('hidden');
+    document.getElementById('addDistCard').classList.remove('hidden');
+    document.getElementById('changePassCard').classList.remove('hidden');
+  }
+  render();
 }
-function logout(){location.reload()}
-function changePassword(){
- if(current.role!='مدير') return alert('بس المدير يغير الباسوردات');
- let u=document.getElementById('passUser').value;
- let np=document.getElementById('newPass').value.trim();
- if(!np || np.length<4) return alert('الباسورد لازم 4 حروف على الأقل');
- let target=users.find(x=>x.u==u);
- target.p=np;
- save();
- document.getElementById('newPass').value='';
- alert('تم تغيير باسورد '+u+' بنجاح ✅\nالباسورد الجديد: '+np);
-}
+function logout(){localStorage.removeItem('petroyam_session');location.reload();}
 function addProduct(){
- if(current.role!='مدير') return alert('بس المدير');
- let n=document.getElementById('pName').value, q=+document.getElementById('pQty').value, pr=+document.getElementById('pPrice').value;
- if(!n||!q) return alert('اكتب الاسم والكمية');
- products.push({name:n,qty:q,price:pr||0});
- logs.unshift({type:'إضافة',name:n,qty:q,price:pr||0,total:(q*(pr||0)),by:current.name,to:'المخزن',time:now(),date:new Date().toISOString().slice(0,10)});
- save(); render(); alert('تمت الإضافة');
+  let n=document.getElementById('pName').value.trim();
+  let pr=Number(document.getElementById('pPrice').value);
+  let q=Number(document.getElementById('pQty').value);
+  let note=document.getElementById('pNote').value;
+  if(!n||!pr){alert('اكتب اسم المنتج والسعر');return;}
+  products.push({name:n,price:pr,qty:q,note:note});
+  saveAll();render();
+  document.getElementById('pName').value='';document.getElementById('pPrice').value='';document.getElementById('pQty').value='';document.getElementById('pNote').value='';
+  alert('تمت إضافة المنتج');
 }
-function addDistributor(){
- if(current.role!='مدير') return alert('إضافة الموزعين بس للمدير');
- let name=document.getElementById('newDistName').value.trim();
- if(!name) return alert('اكتب اسم الموزع');
- if(distributors.includes(name)) return alert('هذا الموزع موجود أصلاً');
- distributors.push(name); save(); render();
- document.getElementById('newDistName').value='';
- alert('تمت إضافة الموزع: '+name);
+function addDist(){
+  let n=document.getElementById('dName').value.trim();
+  let ph=document.getElementById('dPhone').value;
+  let ar=document.getElementById('dArea').value;
+  let note=document.getElementById('dNote').value;
+  if(!n){alert('اكتب اسم الموزع');return;}
+  dists.push({name:n,phone:ph,area:ar,note:note});
+  saveAll();render();
+  document.getElementById('dName').value='';document.getElementById('dPhone').value='';document.getElementById('dArea').value='';document.getElementById('dNote').value='';
+  alert('تمت إضافة الموزع');
 }
-function outStock(){
- let idx=document.getElementById('outProduct').value, q=+document.getElementById('outQty').value, to=document.getElementById('outTo').value, note=document.getElementById('outNote').value;
- if(!distributors.length) return alert('المدير لازم يضيف موزع أولاً');
- if(products[idx].qty < q) return alert('الكمية أكبر من المخزون!');
- let price = products[idx].price||0;
- products[idx].qty-=q;
- logs.unshift({type:'أوردر طلع',name:products[idx].name,qty:q,price:price,total:q*price,by:current.name,to:to,note:note,time:now(),date:new Date().toISOString().slice(0,10)});
- save(); render(); alert('تم تسجيل الأوردر باسم '+to);
+function makeSale(){
+  let pi=document.getElementById('saleProduct').value;
+  let di=document.getElementById('saleDist').value;
+  let q=Number(document.getElementById('saleQty').value);
+  if(pi===''||di===''){alert('اختر المنتج والموزع');return;}
+  if(products[pi].qty<q){alert('الكمية غير متوفرة بالمخزن');return;}
+  products[pi].qty-=q;
+  let total=q*products[pi].price;
+  sales.unshift({date:new Date().toLocaleString('ar-IQ'),product:products[pi].name,dist:dists[di].name,qty:q,total:total});
+  saveAll();render();
+  alert('تم البيع بنجاح - المبلغ: '+total);
 }
-function returnStock(){
- if(current.role!='مدير') return alert('الإرجاع بس للمدير');
- let idx=document.getElementById('retProduct').value, q=+document.getElementById('retQty').value;
- let price = products[idx].price||0;
- products[idx].qty+=q;
- logs.unshift({type:'إرجاع',name:products[idx].name,qty:q,price:price,total:q*price,by:current.name,to:'المدير',time:now(),date:new Date().toISOString().slice(0,10)});
- save(); render();
+function changePass(){
+  let u=document.getElementById('passUser').value;
+  let np=document.getElementById('newPass').value.trim();
+  if(!np){alert('اكتب الباسورد الجديد');return;}
+  let f=users.find(x=>x.u===u); f.p=np; saveAll();
+  document.getElementById('newPass').value='';
+  alert('تم تغيير الباسورد لـ '+u+' إلى: '+np);
 }
-function makeReport(){
- let dist=document.getElementById('repDist').value;
- let from=document.getElementById('repFrom').value;
- let to=document.getElementById('repTo').value;
- if(!from||!to) return alert('حدد التاريخ من - إلى');
- let filtered=logs.filter(l=>l.to==dist && l.type=='أوردر طلع' && l.date>=from && l.date<=to);
- let totalQty=filtered.reduce((s,l)=>s+l.qty,0);
- let totalMoney=filtered.reduce((s,l)=>s+(l.total||0),0);
- document.getElementById('reportBox').classList.remove('hidden');
- document.getElementById('repTitle').innerText=`الموزع: ${dist} | من ${from} إلى ${to}`;
- document.getElementById('repBy').innerText=current.name;
- document.getElementById('repPrintDate').innerText=now();
- let html='<table><tr><th>التاريخ والوقت</th><th>المنتج</th><th>الكمية</th><th>سعر الكارتون</th><th>المجموع</th><th>سجله</th><th>ملاحظة</th></tr>';
- filtered.forEach(l=>{html+=`<tr><td>${l.time}</td><td>${l.name}</td><td>${l.qty} كارتون</td><td>${l.price} د.ع</td><td>${l.total} د.ع</td><td>${l.by}</td><td>${l.note||''}</td></tr>`});
- html+='</table>';
- if(!filtered.length) html='لا يوجد أوردرات بهاي الفترة';
- document.getElementById('repContent').innerHTML=html;
- document.getElementById('repTotal').innerText=`إجمالي الكمية: ${totalQty} كارتون | إجمالي المبلغ: ${totalMoney} دينار`;
- window.scrollTo(0,document.getElementById('reportBox').offsetTop);
-}
+function delProduct(i){if(currentUser.role!=='مدير'){alert('فقط المدير يحذف');return;} if(confirm('حذف المنتج؟')){products.splice(i,1);saveAll();render();}}
+function delDist(i){if(currentUser.role!=='مدير'){alert('فقط المدير يحذف');return;} if(confirm('حذف الموزع؟')){dists.splice(i,1);saveAll();render();}}
 function render(){
- let s=document.getElementById('search').value||'';
- let html='<table><tr><th>المنتج</th><th>الكمية المتوفرة</th><th>سعر الكارتون</th><th>قيمة المخزون</th></tr>';
- let opts='';
- products.forEach((pr,i)=>{
-   if(pr.name.includes(s)) html+=`<tr><td>${pr.name}</td><td>${pr.qty} كارتون</td><td>${pr.price} د.ع</td><td>${pr.qty*pr.price} د.ع</td></tr>`;
-   opts+=`<option value="${i}">${pr.name} - متوفر ${pr.qty} - ${pr.price} د.ع</option>`;
- });
- html+='</table>';
- document.getElementById('stock').innerHTML=html;
- document.getElementById('outProduct').innerHTML=opts||'<option>لا يوجد منتجات</option>';
- document.getElementById('retProduct').innerHTML=opts||'<option>لا يوجد منتجات</option>';
- let distOpts=''; distributors.forEach(d=>{distOpts+=`<option value="${d}">${d}</option>`});
- document.getElementById('outTo').innerHTML=distOpts||'<option>المدير لازم يضيف موزع</option>';
- document.getElementById('repDist').innerHTML=distOpts||'<option>المدير لازم يضيف موزع</option>';
- document.getElementById('distList').innerHTML=distributors.length ? 'الموزعين الحاليين: '+distributors.join(' ، ') : 'لا يوجد موزعين بعد';
- let lh=logs.map(l=>`<div class="small">🔹 ${l.time} | ${l.type} | ${l.name} | ${l.qty} كارتون | سعر: ${l.price} | مجموع: ${l.total} | سجله: ${l.by} | الموزع: ${l.to}</div>`).join('')||'لا يوجد أوردرات';
- document.getElementById('logs').innerHTML=lh;
- let ll=loginLogs.map(l=>`<div class="small">🟢 ${l.time} | دخل: ${l.name} - ${l.role}</div>`).join('')||'لا يوجد دخول';
- document.getElementById('loginLogs').innerHTML=ll;
+  document.getElementById('statProducts').innerText=products.length;
+  document.getElementById('statDist').innerText=dists.length;
+  document.getElementById('statStock').innerText=products.reduce((a,b)=>a+b.qty,0);
+  document.getElementById('statSales').innerText=sales.reduce((a,b)=>a+b.total,0);
+  document.getElementById('productTable').innerHTML=products.map((p,i)=>`<tr><td>${p.name}</td><td>${p.price}</td><td>${p.qty}</td><td>${p.note||''}</td><td><button onclick="delProduct(${i})" style="background:#dc2626;color:#fff;border:0;padding:5px 10px;border-radius:6px;cursor:pointer">حذف</button></td></tr>`).join('')||'<tr><td colspan="5">لا توجد منتجات بعد</td></tr>';
+  document.getElementById('distTable').innerHTML=dists.map((d,i)=>`<tr><td>${d.name}</td><td>${d.phone||''}</td><td>${d.area||''}</td><td><button onclick="delDist(${i})" style="background:#dc2626;color:#fff;border:0;padding:5px 10px;border-radius:6px;cursor:pointer">حذف</button></td></tr>`).join('')||'<tr><td colspan="4">لا يوجد موزعين بعد</td></tr>';
+  document.getElementById('saleProduct').innerHTML=products.map((p,i)=>`<option value="${i}">${p.name} - ${p.price} - متوفر: ${p.qty}</option>`).join('');
+  document.getElementById('saleDist').innerHTML=dists.map((d,i)=>`<option value="${i}">${d.name}</option>`).join('');
+  document.getElementById('salesTable').innerHTML=sales.map(s=>`<tr><td>${s.date}</td><td>${s.product}</td><td>${s.dist}</td><td>${s.qty}</td><td>${s.total}</td></tr>`).join('')||'<tr><td colspan="5">لا توجد مبيعات بعد</td></tr>';
+  updateTotal();
 }
+function updateTotal(){
+  let pi=document.getElementById('saleProduct').value;
+  let q=Number(document.getElementById('saleQty').value||0);
+  if(pi!=='' && products[pi]) document.getElementById('saleTotal').value=q*products[pi].price;
+}
+document.getElementById('saleQty').addEventListener('input',updateTotal);
+document.getElementById('saleProduct').addEventListener('change',updateTotal);
+
+// يبقى مسجل دخول حتى بعد الريفريش
+let savedSession = JSON.parse(localStorage.getItem('petroyam_session')||'null');
+window.addEventListener('load',()=>{
+  if(savedSession){
+    currentUser=savedSession;
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('appPage').classList.remove('hidden');
+    document.getElementById('welcomeName').innerText='مرحباً '+savedSession.name;
+    if(savedSession.role==='مدير'){
+      document.getElementById('addProductCard').classList.remove('hidden');
+      document.getElementById('addDistCard').classList.remove('hidden');
+      document.getElementById('changePassCard').classList.remove('hidden');
+    }
+    render();
+  }
+});
 </script>
 </body>
 </html>

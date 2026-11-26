@@ -44,7 +44,6 @@ th{color:#38bdf8}
     <label>كلمة المرور</label>
     <input id="loginPass" type="password" placeholder="••••••••">
     <button class="btn" onclick="login()">دخول</button>
-    <p class="small" style="text-align:center;margin-top:12px">المدير: admin / Mah@MM@8166@540<br>أمين المخزن: store / Store@123</p>
     <p id="loginError" style="color:#f87171;text-align:center"></p>
   </div>
 </div>
@@ -233,7 +232,6 @@ function updateTotal(){
 document.getElementById('saleQty').addEventListener('input',updateTotal);
 document.getElementById('saleProduct').addEventListener('change',updateTotal);
 
-// يبقى مسجل دخول حتى بعد الريفريش
 let savedSession = JSON.parse(localStorage.getItem('petroyam_session')||'null');
 window.addEventListener('load',()=>{
   if(savedSession){

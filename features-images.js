@@ -1,31 +1,25 @@
 // features-images.js - ملف إضافي فقط، لا تلمس الكود الأساسي
-// 1. اللوغو
 window.addEventListener('load', () => {
+  // 1. اللوغو
   let logoEl = document.querySelector('.logo');
   if(logoEl){
-    logoEl.innerHTML = '<img src="images/logo.png" style="max-height:70px;max-width:220px;object-fit:contain" onerror="this.style.display=\'none\'"><div>PETROYAM</div>';
+    logoEl.innerHTML = '<img src="logo.png" style="max-height:70px;max-width:220px;object-fit:contain"><div style="color:#D4AF37">PETROYAM</div>';
   }
-  // 2. الخلفية المائية
+  // 2. الخلفية الكاملة
   let style = document.createElement('style');
-  style.innerHTML = `body::before{
-    content:''; position:fixed; inset:0;
-    background-image:url('images/background.png');
-    background-repeat:no-repeat; background-position:center;
-    background-size:400px; opacity:0.07; pointer-events:none; z-index:0;
+  style.innerHTML = `
+  body {
+    background: url('background.png') no-repeat center center fixed !important;
+    background-size: cover !important;
   }
-  .container, header{position:relative; z-index:1;}
-  .product-img{width:45px;height:45px;object-fit:cover;border-radius:8px;}`;
+  body::before {
+    content:''; position:fixed; inset:0;
+    background: rgba(15, 23, 42, 0.82);
+    z-index: 0; pointer-events:none;
+  }
+  .container, header { position:relative; z-index:1; }
+  h1, h2, .title { color: #D4AF37 !important; }
+  p, label, span { color: white !important; }
+  `;
   document.head.appendChild(style);
 });
-
-// 3. صورة المنتج - تتحول لصورة صغيرة وتنحفظ مع المنتج
-let currentProductImage = '';
-function handleProductImage(input){
-  let file = input.files[0];
-  if(!file) return;
-  let reader = new FileReader();
-  reader.onload = e => { currentProductImage = e.target.result; alert('تم اختيار صورة المنتج'); };
-  reader.readAsDataURL(file);
-}
-// راح نربطها باضافة المنتج الأصلي
-let oldAddProduct = window.addProduct;
